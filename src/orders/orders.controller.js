@@ -12,7 +12,7 @@ const nextId = require("../utils/nextId");
  * ********************************** */
 
 //MAKE SURE ORDER EXISTS BEFORE RETRIEVING OR PERFORMING ANY UPDATES TO IT
-const orderExists = (req, res, next) => {
+function orderExists(req, res, next) {
   const { orderId } = req.params;
   const foundOrder = orders.find((order) => order.id === orderId);
 
@@ -22,10 +22,10 @@ const orderExists = (req, res, next) => {
   }
 
   return next({ status: 404, message: `Dish with ID: ${orderId} not found.` });
-};
+}
 
 // CHECK DATA SENT BY CLIENT HAS REQUIRED PROPERTIES
-const bodyDataHas = (propertyName) => {
+function bodyDataHas(propertyName) {
   return function (req, res, next) {
     const { data = {} } = req.body;
     res.locals.data = data;
@@ -40,11 +40,11 @@ const bodyDataHas = (propertyName) => {
           }`,
         });
   };
-};
+}
 
 // VALIDATION FOR EACH PROPERTY AS OUTLINED IN REQUIREMENTS
 // FOR 'POST' AND 'PUT'
-const dishQuantityIsValid = (req, res, next) => {
+function dishQuantityIsValid(req, res, next) {
   const { data: { dishes } = {} } = res.locals;
   let index = 0;
   if (dishes.length) {
@@ -61,10 +61,10 @@ const dishQuantityIsValid = (req, res, next) => {
     return next();
   }
   return next({ status: 400, message: `Order must include at least one dish` });
-};
+}
 
 // FOR 'DELETE/DESTROY': CHECK IF AN EXISTING ORDER'S STATUS IS PENDING
-const checkStatusPending = (req, res, next) => {
+function checkStatusPending(req, res, next) {
   const { order } = res.locals;
   order.status === "pending"
     ? next()
@@ -72,18 +72,18 @@ const checkStatusPending = (req, res, next) => {
         status: 400,
         message: `An order cannot be deleted unless it is pending`,
       });
-};
+}
 
 // FOR 'PUT': CHECK IF AN EXISTING ORDER'S STATUS IS NOT DELIVERED
-const statusNotDelivered = (req, res, next) => {
+function statusNotDelivered(req, res, next) {
   const { order } = res.locals;
   order.status === "delivered"
     ? next({ status: 400, message: `A delivered order cannot be changed.` })
     : next();
-};
+}
 
 // FOR 'PUT': MAKE SURE STATUS BEING PASSED IN HAS A VALID STATUS CODE
-const statusIsValid = (req, res, next) => {
+function statusIsValid(req, res, next) {
   const {
     data: { status },
   } = res.locals;
@@ -95,10 +95,10 @@ const statusIsValid = (req, res, next) => {
         status: 400,
         message: `Order must have a status of ${validStatus.join(", ")}`,
       });
-};
+}
 
 // FOR 'PUT': MAKE SURE THE ID IS NOT BEING ALTERED YET STILL ALLOW TO UPDATE IF NO 'ID' PROPERTY IS PASSED IN/IS UNDEFINED
-const checkIdIsSame = (req, res, next) => {
+function checkIdIsSame(req, res, next) {
   const { data: { id } = {} } = req.body;
   const { orderId } = req.params;
 
@@ -111,14 +111,14 @@ const checkIdIsSame = (req, res, next) => {
     });
   }
   return next();
-};
+}
 
 /* ******** ROUTE HANDLERS ********** *
  * ********************************** */
 
-const list = (req, res) => {
+function list(req, res) {
   res.status(200).json({ data: orders });
-};
+}
 
 const create = (req, res) => {
   const { data: { deliverTo, mobileNumber, status, dishes } = {} } = res.locals;
@@ -135,7 +135,7 @@ const create = (req, res) => {
 };
 
 // MAKE SURE TO ADD VALIDATION MIDDLEWARE SO THAT IF NO ID IS PASSED IN, ORDER IS STILL UPDATE, AND IF ID DOES NOT MATCH CURRENT ORDER'S BEING UPDATED ID, IT WILL NOT UPDATE
-const update = (req, res) => {
+function update(req, res) {
   const { data: { deliverTo, mobileNumber, status, dishes } = {} } = res.locals;
   const { order } = res.locals;
   order.deliverTo = deliverTo;
@@ -143,20 +143,20 @@ const update = (req, res) => {
   order.status = status;
   order.dishes = dishes;
   res.status(200).json({ data: order });
-};
+}
 
-const read = (req, res) => {
+function read(req, res) {
   const { order } = res.locals;
   res.status(200).json({ data: order });
-};
+}
 
 // ADD VALIDATION MIDDLEWARE TO MAKE SURE AN ORDER'S STATUS IS NOT PENDING
-const destroy = (req, res) => {
+function destroy(req, res) {
   const { orderId } = req.params;
   const deleteIndex = orders.findIndex((order) => order.id === orderId);
   orders.splice(deleteIndex, 1);
   res.sendStatus(204);
-};
+}
 
 module.exports = {
   list,
